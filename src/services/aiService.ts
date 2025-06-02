@@ -8,7 +8,7 @@ interface AIResponse {
 
 export class AIService {
   private static readonly BASE_ENDPOINT = 'https://advqicvbufeskswnvjtz.supabase.co/functions/v1/ai-service-handler';
-  private static readonly ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkdnFpY3ZidWZlc2tzd252anR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4MjczMTQsImV4cCI6MjA2NDQwMzMxNH0.fCymehOA66wDW1Xy82lJo-GS2Mh727GC30-EKV3fd9U';
+  private static readonly ANON_KEY = 'ANON_KEY';
 
   static async callAgent(agent: string, payload: any): Promise<AIResponse> {
     try {

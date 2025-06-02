@@ -7,7 +7,7 @@ interface AIResponse {
 }
 
 export class AIService {
-  private static readonly BASE_ENDPOINT = 'https://advqicvbufeskswnvjtz.supabase.co/functions/v1/ai-service-handler';
+  private static readonly BASE_ENDPOINT = 'END_POINT_FUNCTION_URL';
   private static readonly ANON_KEY = 'ANON_KEY';
 
   static async callAgent(agent: string, payload: any): Promise<AIResponse> {

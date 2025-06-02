@@ -87,4 +87,3 @@ Pull requests welcome! If you have ideas for new AI plugins or improvements, ope
 
 MIT License.
 
--

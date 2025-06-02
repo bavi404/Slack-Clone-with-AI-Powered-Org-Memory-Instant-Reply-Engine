@@ -39,8 +39,8 @@ This project is a collaborative chat platform (like Slack!) with channels, threa
 
 1. **Clone the repo**:
 
-   git clone https://github.com/<your-username>/ai-chat-platform
-   cd ai-chat-platform
+   - git clone https://github.com/<your-username>/ai-chat-platform
+   - cd ai-chat-platform
 
 2. **Install dependencies**:
 

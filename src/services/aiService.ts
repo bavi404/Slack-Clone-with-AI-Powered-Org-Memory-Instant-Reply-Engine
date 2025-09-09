@@ -52,6 +52,19 @@ export class AIService {
         return { success: true, data };
       }
 
+      // Use Supabase Edge Function for MeetingNotesGen
+      if (agent === 'MeetingNotesGen') {
+        const { data, error } = await supabase.functions.invoke('meeting-notes-gen', {
+          body: { threadMessages: payload.threadMessages, title: payload.title }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        return { success: true, data };
+      }
+
       // For other agents, use a fallback or mock response
       return { 
         success: false, 

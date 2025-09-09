@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.tone-impact-meter]
 verify_jwt = false
+
+[functions.meeting-notes-gen]
+verify_jwt = false

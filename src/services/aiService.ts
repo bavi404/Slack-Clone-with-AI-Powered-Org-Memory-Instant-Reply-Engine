@@ -39,6 +39,19 @@ export class AIService {
         return { success: true, data };
       }
 
+      // Use Supabase Edge Function for ToneImpactMeter
+      if (agent === 'ToneImpactMeter') {
+        const { data, error } = await supabase.functions.invoke('tone-impact-meter', {
+          body: { prompt: payload.prompt }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        return { success: true, data };
+      }
+
       // For other agents, use a fallback or mock response
       return { 
         success: false, 

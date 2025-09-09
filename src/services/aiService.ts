@@ -7,35 +7,43 @@ interface AIResponse {
 }
 
 export class AIService {
-  private static readonly BASE_ENDPOINT = 'END_POINT_FUNCTION_URL';
-  private static readonly ANON_KEY = 'ANON_KEY';
+  private static readonly SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://advqicvbufeskswnvjtz.supabase.co";
 
   static async callAgent(agent: string, payload: any): Promise<AIResponse> {
     try {
       console.log(`Calling ${agent} with payload:`, payload);
 
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.ANON_KEY}`,
-        'apikey': this.ANON_KEY
-      };
+      // Use Supabase Edge Function for OrgBrain
+      if (agent === 'OrgBrain') {
+        const { data, error } = await supabase.functions.invoke('ask-org-brain', {
+          body: { query: payload.prompt }
+        });
 
-      const response = await fetch(this.BASE_ENDPOINT, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload)
-      });
+        if (error) {
+          throw error;
+        }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`HTTP error! status: ${response.status}, response:`, errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
+        return { success: true, data };
       }
 
-      const result = await response.json();
-      console.log(`${agent} response:`, result);
-      
-      return { success: true, data: result };
+      // Use Supabase Edge Function for AutoReplyComposer
+      if (agent === 'AutoReplyComposer') {
+        const { data, error } = await supabase.functions.invoke('auto-reply-composer', {
+          body: { threadMessages: payload.threadMessages }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        return { success: true, data };
+      }
+
+      // For other agents, use a fallback or mock response
+      return { 
+        success: false, 
+        error: `Agent ${agent} not implemented yet` 
+      };
     } catch (error) {
       console.error(`AI Service Error (${agent}):`, error);
       return { 

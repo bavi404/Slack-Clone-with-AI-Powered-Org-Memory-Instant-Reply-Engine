@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Brain, Send, Loader2, AlertCircle } from 'lucide-react';
 import { AIService } from '@/services/aiService';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OrgBrainProps {
   currentUser: any;
@@ -40,6 +41,7 @@ export const OrgBrain: React.FC<OrgBrainProps> = ({ currentUser }) => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const { toast } = useToast();
 
+
   const handleAskOrgBrain = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim() || isLoading) return;
@@ -59,34 +61,28 @@ export const OrgBrain: React.FC<OrgBrainProps> = ({ currentUser }) => {
     try {
       console.log('Sending OrgBrain query:', currentQuery);
       
-      // Create context documents (mock data for now - in a real app this would come from your organization's data)
-      const contextDocs = [
-        "Project Atlas is our flagship initiative focused on improving team collaboration and productivity.",
-        "The development channel has been discussing the new feature rollout scheduled for next month.",
-        "Marketing team has published guidelines for the Q2 campaign targeting enterprise customers.",
-        "HR announced new remote work policies effective from next quarter."
-      ];
-      
-      const response = await AIService.summarizeMessages(currentQuery, undefined, contextDocs);
+      // Call the Supabase Edge Function directly
+      const { data, error } = await supabase.functions.invoke('ask-org-brain', {
+        body: { query: currentQuery }
+      });
 
-      console.log('OrgBrain response received:', response);
-
-      if (!response.success) {
-        throw new Error(response.error || 'Failed to get response from OrgBrain');
+      if (error) {
+        throw error;
       }
 
-      // Handle both direct response and nested response structure
-      const orgBrainData = response.data;
+      console.log('OrgBrain response received:', data);
+
+      // Handle the response from the Edge Function
       let responseText: string;
       let sources: any = undefined;
 
-      if (typeof orgBrainData === 'string') {
-        responseText = orgBrainData;
-      } else if (orgBrainData.response) {
-        responseText = orgBrainData.response;
-        sources = orgBrainData.sources;
+      if (typeof data === 'string') {
+        responseText = data;
+      } else if (data.response) {
+        responseText = data.response;
+        sources = data.sources;
       } else {
-        responseText = JSON.stringify(orgBrainData);
+        responseText = JSON.stringify(data);
       }
       
       const botMessage: ChatMessage = {
@@ -154,10 +150,11 @@ export const OrgBrain: React.FC<OrgBrainProps> = ({ currentUser }) => {
                 <div className="mt-4 text-xs text-slate-500">
                   <p className="mb-2">Try asking:</p>
                   <ul className="space-y-1 text-left max-w-sm mx-auto">
-                    <li>"What's the latest on Project Atlas?"</li>
-                    <li>"Any updates in the development channel?"</li>
-                    <li>"Show me pinned documents about marketing"</li>
-                    <li>"What discussions are happening in general?"</li>
+                    <li>"What's being discussed in the development channel?"</li>
+                    <li>"Any recent updates in general?"</li>
+                    <li>"What are the latest messages about?"</li>
+                    <li>"Show me what's happening in design channel"</li>
+                    <li>"Summarize recent conversations"</li>
                   </ul>
                 </div>
               </div>

@@ -43,44 +43,27 @@ export const AutoReplyComposer: React.FC<AutoReplyComposerProps> = ({
 
       let suggestions: ReplyOption[] = [];
 
-      // Handle different response formats
-      if (response.data) {
-        if (typeof response.data === 'string') {
-          // If it's a string, parse it as a single suggestion
-          suggestions = [{
-            id: '1',
-            content: response.data,
-            tone: 'Professional'
-          }];
-        } else if (Array.isArray(response.data)) {
-          // If it's an array, map each item
-          suggestions = response.data.map((item: any, index: number) => ({
-            id: (index + 1).toString(),
-            content: typeof item === 'string' ? item : item.content || item.reply || JSON.stringify(item),
-            tone: item.tone || 'Professional'
-          }));
-        } else if (response.data.suggestions && Array.isArray(response.data.suggestions)) {
-          // Handle nested suggestions array
-          suggestions = response.data.suggestions.map((item: any, index: number) => ({
-            id: (index + 1).toString(),
-            content: typeof item === 'string' ? item : item.content || item.reply || JSON.stringify(item),
-            tone: item.tone || 'Professional'
-          }));
-        } else if (response.data.content || response.data.reply) {
-          // Handle single object response
-          suggestions = [{
-            id: '1',
-            content: response.data.content || response.data.reply,
-            tone: response.data.tone || 'Professional'
-          }];
-        } else {
-          // Fallback: treat the entire response as content
-          suggestions = [{
-            id: '1',
-            content: JSON.stringify(response.data),
-            tone: 'Professional'
-          }];
-        }
+      // Handle the new response format from Edge Function
+      if (response.data && response.data.suggestions) {
+        suggestions = response.data.suggestions.map((item: any, index: number) => ({
+          id: (index + 1).toString(),
+          content: item.content || item,
+          tone: item.tone || 'Professional'
+        }));
+      } else if (Array.isArray(response.data)) {
+        // Fallback for array format
+        suggestions = response.data.map((item: any, index: number) => ({
+          id: (index + 1).toString(),
+          content: typeof item === 'string' ? item : item.content || item.reply || JSON.stringify(item),
+          tone: item.tone || 'Professional'
+        }));
+      } else if (typeof response.data === 'string') {
+        // Single string response
+        suggestions = [{
+          id: '1',
+          content: response.data,
+          tone: 'Professional'
+        }];
       }
 
       // Ensure we have at least some suggestions

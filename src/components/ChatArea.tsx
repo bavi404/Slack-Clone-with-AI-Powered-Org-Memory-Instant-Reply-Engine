@@ -8,6 +8,8 @@ import { Send, Smile, Paperclip, MoreVertical, Bot } from 'lucide-react';
 import { Message } from './Message';
 import { ToneImpactMeter } from './ToneImpactMeter';
 import { MeetingNotesGen } from './MeetingNotesGen';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChatAreaProps {
   currentChannel: string;
@@ -22,64 +24,176 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 }) => {
   const [message, setMessage] = useState('');
   const [showMeetingNotes, setShowMeetingNotes] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      user: {
-        id: 2,
-        name: 'Alice Cooper',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alice'
-      },
-      content: 'Hey everyone! Welcome to the #general channel 👋',
-      timestamp: new Date(Date.now() - 3600000),
-      replies: 3,
-      channel: 'general'
-    },
-    {
-      id: 2,
-      user: {
-        id: 3,
-        name: 'Bob Smith',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bob'
-      },
-      content: 'Thanks Alice! Excited to be here. @alice when is the next team meeting?',
-      timestamp: new Date(Date.now() - 1800000),
-      replies: 1,
-      channel: 'general'
-    },
-    {
-      id: 3,
-      user: {
-        id: 4,
-        name: 'Carol Johnson',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=carol'
-      },
-      content: 'Check out this new design concept I\'ve been working on! What do you all think?',
-      timestamp: new Date(Date.now() - 900000),
-      replies: 0,
-      channel: 'design'
-    }
-  ]);
-
+  const [messages, setMessages] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<any>(null);
+  const { toast } = useToast();
+
+  // Load messages when channel changes
+  useEffect(() => {
+    loadMessages();
+  }, [currentChannel]);
+
+  // Set up real-time subscription for new messages
+  useEffect(() => {
+    const channel = supabase
+      .channel('messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          console.log('New message received:', payload);
+          loadMessageWithUser(payload.new);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const loadMessages = async () => {
+    setIsLoading(true);
+    try {
+      // First, get the channel ID
+      const { data: channelData, error: channelError } = await supabase
+        .from('channels')
+        .select('id')
+        .eq('name', currentChannel)
+        .single();
+
+      if (channelError) {
+        console.error('Error fetching channel:', channelError);
+        return;
+      }
+
+      // Load messages for this channel
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select(`
+          id,
+          content,
+          created_at,
+          user_id,
+          users!inner(display_name, username)
+        `)
+        .eq('channel_id', channelData.id)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
+        return;
+      }
+
+      // Transform messages to match expected format
+      const transformedMessages = messagesData?.map(msg => ({
+        id: msg.id,
+        user: {
+          id: msg.user_id,
+          name: msg.users?.display_name || msg.users?.username || 'Unknown User',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user_id}`
+        },
+        content: msg.content,
+        timestamp: new Date(msg.created_at),
+        replies: 0, // TODO: Implement reply counting
+        channel: currentChannel
+      })) || [];
+
+      setMessages(transformedMessages);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load messages",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadMessageWithUser = async (messageData: any) => {
+    try {
+      // Get user info for the new message
+      const { data: userData } = await supabase
+        .from('users')
+        .select('display_name, username')
+        .eq('id', messageData.user_id)
+        .single();
+
+      const newMessage = {
+        id: messageData.id,
+        user: {
+          id: messageData.user_id,
+          name: userData?.display_name || userData?.username || 'Unknown User',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${messageData.user_id}`
+        },
+        content: messageData.content,
+        timestamp: new Date(messageData.created_at),
+        replies: 0,
+        channel: currentChannel
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+    } catch (error) {
+      console.error('Error loading message with user:', error);
+    }
+  };
 
   const channelMessages = messages.filter(msg => msg.channel === currentChannel);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || !currentUser) return;
 
-    const newMessage = {
-      id: Date.now(),
-      user: currentUser,
-      content: message,
-      timestamp: new Date(),
-      replies: 0,
-      channel: currentChannel
-    };
+    const messageContent = message.trim();
+    setMessage(''); // Clear input immediately for better UX
 
-    setMessages([...messages, newMessage]);
-    setMessage('');
+    try {
+      // Get the channel ID
+      const { data: channelData, error: channelError } = await supabase
+        .from('channels')
+        .select('id')
+        .eq('name', currentChannel)
+        .single();
+
+      if (channelError) {
+        throw channelError;
+      }
+
+      // Save message to database
+      const { data: messageData, error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          content: messageContent,
+          channel_id: channelData.id,
+          user_id: currentUser.id
+        })
+        .select()
+        .single();
+
+      if (messageError) {
+        throw messageError;
+      }
+
+      // The real-time subscription will handle adding the message to the UI
+      console.log('Message saved successfully:', messageData);
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+      // Restore message to input on error
+      setMessage(messageContent);
+    }
     
     // Scroll to bottom
     setTimeout(() => {
@@ -151,7 +265,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       {/* Messages */}
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
         <div className="space-y-4">
-          {channelMessages.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="text-slate-400">Loading messages...</div>
+            </div>
+          ) : channelMessages.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-slate-400">No messages in #{currentChannel} yet.</p>
               <p className="text-sm text-slate-500 mt-1">Be the first to say something!</p>

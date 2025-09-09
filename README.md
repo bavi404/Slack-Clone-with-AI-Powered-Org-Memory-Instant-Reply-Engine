@@ -6,10 +6,12 @@ This project is a collaborative chat platform (like Slack!) with channels, threa
 
  **Real-Time Chat Platform**
 
-* Channels & threads
-* @mentions and reactions
+* **Live Messaging**: Messages appear instantly across all connected clients
+* **Persistent Storage**: All messages are saved to the database and persist across sessions
+* **Multi-User Support**: Multiple users can chat simultaneously in real-time
+* Channels & threads with @mentions and reactions
 * Fast, intuitive UI built with **React** and **Vite**
-* **Supabase** for authentication and real-time database updates
+* **Supabase** for authentication, real-time database updates, and live subscriptions
 
  **AI-Powered Add-ons**
 
@@ -39,24 +41,44 @@ This project is a collaborative chat platform (like Slack!) with channels, threa
 
 1. **Clone the repo**:
 
-   - git clone https://github.com/<your-username>/ai-chat-platform
-   - cd ai-chat-platform
+   ```bash
+   git clone https://github.com/<your-username>/ai-chat-platform
+   cd ai-chat-platform
+   ```
 
 2. **Install dependencies**:
 
+   ```bash
    npm install
+   ```
 
-3. **Configure environment**:
-   Create a `.env` file with:
+3. **Set up Supabase Database**:
+   
+   - Go to [Supabase Dashboard](https://supabase.com/dashboard)
+   - Create a new project or use the existing one
+   - Run the SQL script from `scripts/init-db.sql` in the SQL Editor to create tables and policies
+   - Get your project URL and anon key from Settings > API
 
-   VITE_SUPABASE_URL=<your-supabase-url>
-   VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
-   VITE_OPENAI_API_KEY=<optional-if-using-openai>
-   VITE_GEMINI_API_KEY=<optional-if-using-gemini>
+4. **Configure environment**:
+   Create a `.env` file in the root directory:
 
-4. **Run the app locally**:
+   ```env
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_OPENAI_API_KEY=your_openai_api_key_here
+   VITE_GEMINI_API_KEY=your_gemini_api_key_here
+   ```
 
+5. **Run the app locally**:
+
+   ```bash
    npm run dev
+   ```
+
+6. **Test Real-time Functionality**:
+   - Open the app in two different browser windows/tabs
+   - Sign up with different accounts
+   - Send messages in one window and see them appear instantly in the other
 
 ---
 

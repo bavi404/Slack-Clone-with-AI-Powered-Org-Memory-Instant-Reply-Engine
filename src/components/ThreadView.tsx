@@ -18,28 +18,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ thread, currentUser, onC
   const [reply, setReply] = useState('');
   const [showAutoReply, setShowAutoReply] = useState(false);
   const [showMeetingNotes, setShowMeetingNotes] = useState(false);
-  const [replies, setReplies] = useState([
-    {
-      id: 1,
-      user: {
-        id: 2,
-        name: 'Bob Smith',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bob'
-      },
-      content: 'Great point! I totally agree with this approach.',
-      timestamp: new Date(Date.now() - 1200000)
-    },
-    {
-      id: 2,
-      user: {
-        id: 3,
-        name: 'Carol Johnson',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=carol'
-      },
-      content: 'This looks really promising. When can we implement this?',
-      timestamp: new Date(Date.now() - 600000)
-    }
-  ]);
+  const [replies, setReplies] = useState<any[]>([]);
 
   const handleSendReply = (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,25 +123,34 @@ export const ThreadView: React.FC<ThreadViewProps> = ({ thread, currentUser, onC
       {/* Replies */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {replies.map((replyMsg) => (
-            <div key={replyMsg.id} className="flex items-start space-x-3">
-              <Avatar className="w-8 h-8 flex-shrink-0">
-                <AvatarImage src={replyMsg.user.avatar} />
-                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm">
-                  {replyMsg.user.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="font-medium text-white text-sm">{replyMsg.user.name}</span>
-                  <span className="text-xs text-slate-400">
-                    {formatDistanceToNow(replyMsg.timestamp, { addSuffix: true })}
-                  </span>
-                </div>
-                <div className="text-slate-300 text-sm break-words">{replyMsg.content}</div>
-              </div>
+          {replies.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-slate-400 mb-2">No replies yet</p>
+              <p className="text-sm text-slate-500">
+                Be the first to reply to this message
+              </p>
             </div>
-          ))}
+          ) : (
+            replies.map((replyMsg) => (
+              <div key={replyMsg.id} className="flex items-start space-x-3">
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  <AvatarImage src={replyMsg.user.avatar} />
+                  <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm">
+                    {replyMsg.user.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="font-medium text-white text-sm">{replyMsg.user.name}</span>
+                    <span className="text-xs text-slate-400">
+                      {formatDistanceToNow(replyMsg.timestamp, { addSuffix: true })}
+                    </span>
+                  </div>
+                  <div className="text-slate-300 text-sm break-words">{replyMsg.content}</div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </ScrollArea>
 

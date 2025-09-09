@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageSquare } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthFormProps {
   onAuth: (user: any) => void;
@@ -13,31 +15,120 @@ interface AuthFormProps {
 export const AuthForm: React.FC<AuthFormProps> = ({ onAuth }) => {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [signupData, setSignupData] = useState({ name: '', email: '', password: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login - in real app this would connect to authentication service
-    const user = {
-      id: 1,
-      name: loginData.email.split('@')[0],
-      email: loginData.email,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${loginData.email}`,
-      status: 'online'
-    };
-    onAuth(user);
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        // Get user profile from database
+        const { data: profile, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          throw profileError;
+        }
+
+        const user = {
+          id: data.user.id,
+          name: profile?.display_name || data.user.email?.split('@')[0] || 'User',
+          email: data.user.email,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.email}`,
+          status: 'online'
+        };
+
+        onAuth(user);
+        
+        toast({
+          title: "Success",
+          description: "Logged in successfully!",
+        });
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: error.message || "Failed to log in. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate signup - in real app this would connect to authentication service
-    const user = {
-      id: Date.now(),
-      name: signupData.name,
-      email: signupData.email,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${signupData.email}`,
-      status: 'online'
-    };
-    onAuth(user);
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: signupData.email,
+        password: signupData.password,
+        options: {
+          data: {
+            display_name: signupData.name,
+          }
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        // Create user profile in database
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: data.user.id,
+            username: signupData.email.split('@')[0],
+            display_name: signupData.name,
+          });
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+        }
+
+        const user = {
+          id: data.user.id,
+          name: signupData.name,
+          email: signupData.email,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${signupData.email}`,
+          status: 'online'
+        };
+
+        onAuth(user);
+        
+        toast({
+          title: "Account Created",
+          description: "Welcome! Your account has been created successfully.",
+        });
+      }
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      toast({
+        title: "Signup Failed",
+        description: error.message || "Failed to create account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -83,8 +174,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuth }) => {
                     className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
                     required
                   />
-                  <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
-                    Sign In
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Signing In...' : 'Sign In'}
                   </Button>
                 </form>
               </CardContent>
@@ -123,8 +218,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuth }) => {
                     className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
                     required
                   />
-                  <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
-                    Create Account
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </form>
               </CardContent>

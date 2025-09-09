@@ -3,3 +3,6 @@ project_id = "advqicvbufeskswnvjtz"
 
 [functions.ask-org-brain]
 verify_jwt = false
+
+[functions.auto-reply-composer]
+verify_jwt = false

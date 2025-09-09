@@ -20,9 +20,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [channels] = useState([
     { id: 'general', name: 'general', unread: 0 },
-    { id: 'random', name: 'random', unread: 2 },
+    { id: 'random', name: 'random', unread: 0 },
     { id: 'development', name: 'development', unread: 0 },
-    { id: 'design', name: 'design', unread: 1 },
+    { id: 'design', name: 'design', unread: 0 },
     { id: 'marketing', name: 'marketing', unread: 0 }
   ]);
 
@@ -96,14 +96,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </Button>
             </div>
             <div className="space-y-1">
-              <button className="w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors text-slate-300 hover:bg-white/10 hover:text-white">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Alice Cooper</span>
-              </button>
-              <button className="w-full flex items-center space-x-2 px-2 py-1.5 rounded-md text-left transition-colors text-slate-300 hover:bg-white/10 hover:text-white">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <span>Bob Smith</span>
-              </button>
+              <div className="text-center py-4">
+                <p className="text-slate-400 text-sm">No direct messages yet</p>
+                <p className="text-slate-500 text-xs mt-1">Start a conversation with someone</p>
+              </div>
             </div>
           </div>
         </div>

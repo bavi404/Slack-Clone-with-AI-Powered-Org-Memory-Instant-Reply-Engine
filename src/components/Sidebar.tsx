@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Hash, Plus, Users, Settings, LogOut, MessageSquare, Brain } from 'lucide-react';
+import { Hash, Plus, Users, Settings, LogOut, MessageSquare, Brain, Palette } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface SidebarProps {
@@ -38,6 +38,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <h1 className="text-white font-semibold">ChatFlow</h1>
             <p className="text-xs text-slate-400">Workspace</p>
           </div>
+        </div>
+      </div>
+
+      {/* Theme Switcher */}
+      <div className="p-3 border-b border-white/10">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wide">Theme</h3>
+          <Palette className="w-4 h-4 text-slate-400" />
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={() => document.documentElement.classList.remove('theme-ocean','theme-sunset') || document.documentElement.classList.add('theme-neon')}
+            className="h-7 rounded bg-gradient-to-r from-fuchsia-500 to-cyan-400 text-[10px] text-white hover:opacity-90"
+            title="Neon"
+          >Neon</button>
+          <button
+            onClick={() => document.documentElement.classList.remove('theme-neon','theme-sunset') || document.documentElement.classList.add('theme-ocean')}
+            className="h-7 rounded bg-gradient-to-r from-sky-600 to-teal-400 text-[10px] text-white hover:opacity-90"
+            title="Ocean"
+          >Ocean</button>
+          <button
+            onClick={() => document.documentElement.classList.remove('theme-neon','theme-ocean') || document.documentElement.classList.add('theme-sunset')}
+            className="h-7 rounded bg-gradient-to-r from-orange-500 to-rose-500 text-[10px] text-white hover:opacity-90"
+            title="Sunset"
+          >Sunset</button>
         </div>
       </div>
 

@@ -104,4 +104,29 @@
     background-size: 300% 300%;
     animation: gradientShift 20s ease infinite;
   }
+
+  /* Theme presets override CSS variables */
+  .theme-neon {
+    --primary: 285 95% 60%;
+    --primary-foreground: 256 100% 12%;
+    --accent: 165 95% 45%;
+    --accent-foreground: 0 0% 100%;
+    --ring: 285 95% 60%;
+  }
+
+  .theme-ocean {
+    --primary: 200 90% 45%;
+    --primary-foreground: 210 40% 98%;
+    --accent: 180 85% 40%;
+    --accent-foreground: 210 40% 98%;
+    --ring: 195 90% 50%;
+  }
+
+  .theme-sunset {
+    --primary: 15 90% 55%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 340 85% 55%;
+    --accent-foreground: 0 0% 100%;
+    --ring: 10 90% 55%;
+  }
 }

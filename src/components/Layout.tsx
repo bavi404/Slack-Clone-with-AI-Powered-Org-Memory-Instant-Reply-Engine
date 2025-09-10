@@ -28,7 +28,7 @@ export const Layout: React.FC<LayoutProps> = ({
   const [showOrgBrain, setShowOrgBrain] = useState(false);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex overflow-hidden">
+    <div className="h-screen flex overflow-hidden animated-gradient bg-[linear-gradient(120deg,_#0f172a,_#312e81,_#0f766e,_#4c1d95,_#0f172a)]">
       <Sidebar
         currentChannel={currentChannel}
         setCurrentChannel={setCurrentChannel}
